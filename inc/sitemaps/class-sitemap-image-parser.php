@@ -63,7 +63,18 @@ class WPSEO_Sitemap_Image_Parser {
 		$images = array();
 
 		$content = $post->post_content;
-		$content = '<p><img src="' . $this->image_url( get_post_thumbnail_id( $post->ID ) ) . '" alt="' . $post->post_title . '" /></p>' . $content;
+		
+		if ( $post->post_type == 'post' ) {
+            $content = '<p><img src="' . $this->image_url( get_post_thumbnail_id( $post->ID ) ) . '" alt="' . $post->post_title . '" /></p>' . $content;
+        } else if ($post->post_type == 'attachment') {
+            $meta = wp_get_attachment_metadata( $post->ID );
+            preg_match('/(\\d)*\\/(\\d)*\\//', $meta['file'], $matches);
+            foreach ($meta['sizes'] as $size) {
+                $content .= '<p><img src="'.home_url(). '/wp-content/uploads/' . $matches[0] .$size['file'].'" alt="' . $post->post_title . ' ' . $size['width'].'x'.$size['height']. '" /></p>';
+            }
+            $full = wp_get_attachment_image_src( $post->ID, 'full' );
+            $content .= '<p><img src="'.$full[0].'" alt="' . $post->post_title . '" /></p>';
+        }
 
 		if ( preg_match_all( '`<img [^>]+>`', $content, $matches ) ) {
 
